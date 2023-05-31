@@ -76,6 +76,45 @@ public class Main {
 		return out2;
 	}
 
+	public static DynArray<Boolean> lzw_decode(DynArray<Boolean> input){
+		DynArray<Boolean> output = new DynArray<Boolean>();
+		DynArray<String> dictionary = new DynArray<String>();
+		String previous_word,
+		       current_word;
+		boolean dublicate;
+		int highest_used_dictionary = convertToInt(input, 0, 3);
+		for (int i = 4; i < input.getLength(); i++) {
+			boolean is_pointer = input.getItem(i);
+			if(is_pointer)
+				current_word = String.valueOf(convertToInt(input, i, i+highest_used_dictionary));
+			else 
+				current_word = String.valueOf(convertToInt(input, i, i+ASCII_MAX));
+
+			if(findInDynArray(previous_word + current_word, dictionary) == -1){
+				dublicate = false;
+			}
+
+			if(!is_pointer){
+				if(dublicate){
+					previous_word = (previous_word + current_word);
+				} else {
+					dictionary.append(previous_word+current_word);
+					int encoding_for_prev_word = ASCII_MAX + findInDynArray(previous_word, dictionary) + 1;
+					if(highest_used_dictionary < encoding_for_prev_word - (ASCII_MAX+1)){
+						highest_used_dictionary = encoding_for_prev_word - (ASCII_MAX+1);
+					}
+					if(encoding_for_prev_word == ASCII_MAX){
+						encoding_for_prev_word = previous_word.charAt(0);
+					}
+					output.append(encoding_for_prev_word);
+					previous_word = "" + current_word;
+				}
+			}
+
+		}
+		return output;
+	}
+
 	public static int bitLength(int num){
 		int bitlength = 1;
 		while(Math.pow(2 , bitlength) < num){
@@ -99,13 +138,13 @@ public class Main {
 		return output;
 	}
 
-	public static char convertToChar(Boolean[] input){
+	public static int convertToInt(DynArray<Boolean> input, int index_min, int index_max){
 		int output = 0;
-		for (int i=0; i < 7; i++){
-			if(input[i])
-				output += 1 << (6-i);
+		for (int i=index_min; i <= index_max; i++){
+			if(input.getItem(i))
+				output += 1 << (index_max-i); // idk ob dass richig ist, überprüfen
 		}
-		return (char)output;
+		return output;
 	}
 
 	public static DynArray<Integer> readFile(String filepath){
