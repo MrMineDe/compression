@@ -1,31 +1,48 @@
-import java.io.*;  
+import java.io.*;
 
 public class Main {
 
-	public static String lzw_encode(String input){
+	public static int findInDynArray(String search_term, DynArray<String> dynarray){
+		for (int i = 0; i < dynarray.getLength(); i++) {
+			if(search_term.equals(dynarray.getItem(i))){
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	// For Context on how LZW compression works see: https://www.youtube.com/watch?v=dLvvGXwKUGw
+	public static DynArray<Integer> lzw_encode(DynArray<Integer> input){
 		DynArray<String> dictionary = new DynArray<String>();
-		String output = new String(""),
-		       previous_word = new String(""),
+		DynArray<Integer> output = new DynArray<Integer>();
+		String previous_word = new String(""),
 		       current_word = new String("");
 		boolean dublicate = false;
 
-		for(int i=0; i < input.length(); i++){
-			current_word = String.valueOf(input.charAt(i));
-			for(int j=0; j < dictionary.getLength(); j++){
-				if((previous_word+current_word) == dictionary.getItem(i)){
-					dublicate = true;
-					break;
-				}
+		previous_word = String.valueOf(input.getItem(0));
+		for(int i=1; i < input.getLength(); i++){
+			dublicate = false;
+			current_word = String.valueOf(input.getItem(i));
+			if(findInDynArray(previous_word + current_word, dictionary) != -1){
+				dublicate = true;
 			}
-			if(!dublicate){
-				dictionary.append((previous_word)+current_word);
-				previous_word = "" + current_word;
-				output = (output + previous_word);
-			} else {
+			if(dublicate){
 				previous_word = (previous_word + current_word);
+			} else {
+				dictionary.append(previous_word+current_word);
+				previous_word = "" + current_word;
+				int encoding_for_prev_word = findInDynArray(previous_word, dictionary);
+				if(encoding_for_prev_word == -1){
+					encoding_for_prev_word = (int)previous_word.indexOf(0);
+				}
+				output.append(encoding_for_prev_word);
 			}
 		}
-
+		int encoding_for_prev_word = findInDynArray(previous_word, dictionary);
+		if(encoding_for_prev_word == -1){
+			encoding_for_prev_word = (int)previous_word.indexOf(0);
+		}
+		output.append(encoding_for_prev_word);
 
 		return output;
 	}
@@ -54,9 +71,9 @@ public class Main {
 		return (char)output;
 	}
 
-	public static DynArray<Boolean> readFile(String filepath){
+	public static DynArray<Integer> readFile(String filepath){
 		File file = new File(filepath);
-		DynArray<Boolean> data = new DynArray<Boolean>();
+		DynArray<Integer> data = new DynArray<Integer>();
 		if(!file.exists()){
 			System.out.println("Error opening file. Does it exist? Do you have permission?");
 			return null;
@@ -66,7 +83,7 @@ public class Main {
 			int r = 0;
 
 			while((r = fis.read()) != -1){
-				appendToBooleanArray(data, convertToBoolean((char)r));
+				data.append(r);
 			}
 			fis.close();
 		} catch ( Exception IOException) {
@@ -75,7 +92,17 @@ public class Main {
 		return data;
 	}
 
+	public static void output_data(DynArray<Integer> data){
+		for (int i=0; i < data.getLength(); i++) {
+			System.out.print(data.getItem(i) + "; ");
+		}
+	}
+
 	public static void main(String[] x){
-		readFile("file");
+		DynArray<Integer> data = readFile("file");
+		output_data(data);
+		data = lzw_encode(data);
+		System.out.println("");
+		output_data(data);
 	}
 }
