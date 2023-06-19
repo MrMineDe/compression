@@ -40,24 +40,24 @@ public class Main {
 				prev_word = (prev_word + cur_word);
 			} else {
 				dictionary.append(prev_word+cur_word);
-				int encodingForPrev_word = ASCII_MAX + findInDynArray(prev_word, dictionary) + 1;
-				if(bitsForPointers < bitLength(encodingForPrev_word - (ASCII_MAX+1))){
-					bitsForPointers = bitLength(encodingForPrev_word - (ASCII_MAX+1));
+				int encodingForPrev_word = ASCII_MAX + findInDynArray(prev_word, dictionary);
+				if(bitsForPointers < bitLength(encodingForPrev_word - (ASCII_MAX))){
+					bitsForPointers = bitLength(encodingForPrev_word - (ASCII_MAX));
 				}
 				// If the prev word is not found in the dictionary the value should 
 				// be just the character
-				if(encodingForPrev_word == ASCII_MAX){
+				if(encodingForPrev_word == ASCII_MAX-1){
 					encodingForPrev_word = prev_word.charAt(0);
 				}
 				out.append(encodingForPrev_word);
 				prev_word = "" + cur_word;
 			}
 		}
-		int encodingForPrev_word = ASCII_MAX + findInDynArray(prev_word, dictionary) + 1;
-		if(bitsForPointers < bitLength(encodingForPrev_word - (ASCII_MAX+1))){
-			bitsForPointers = bitLength(encodingForPrev_word - (ASCII_MAX+1));
+		int encodingForPrev_word = ASCII_MAX + findInDynArray(prev_word, dictionary);
+		if(bitsForPointers < bitLength(encodingForPrev_word - (ASCII_MAX))){
+			bitsForPointers = bitLength(encodingForPrev_word - (ASCII_MAX));
 		}
-		if(encodingForPrev_word == ASCII_MAX){
+		if(encodingForPrev_word == ASCII_MAX-1){
 			encodingForPrev_word = prev_word.charAt(0);
 		}
 		out.append(encodingForPrev_word);
@@ -112,7 +112,7 @@ public class Main {
 
 				int prev_wordLen = 0;
 				//Start queue if the pointer calculates itself
-				if(pointerValue > dict.getLength()){
+				if(pointerValue > dict.getLength()-1){
 					prev_wordLen = prev_word.length()-1;
 					dict = lzwResolveQueue(dict, prev_word, prev_word);
 					prev_word = dict.getItem(dict.getLength()-1);
@@ -121,7 +121,7 @@ public class Main {
 
 				dict = lzwResolveQueue(dict, dict.getItem(pointerValue).substring(prev_wordLen), prev_word);
 				prev_word = dict.getItem(dict.getLength()-1);
-				dict.delete(dict.getLength());
+				dict.delete(dict.getLength()-1);
 				for(int j=0; j < dict.getItem(pointerValue).length(); j++){
 					out.append((int)dict.getItem(pointerValue).charAt(j));
 				}
@@ -219,18 +219,276 @@ public class Main {
 		}
 	}
 
+	public static DynArray<Boolean> dynIntToBool(DynArray<Integer> in){
+		DynArray<Boolean> out = new DynArray<Boolean>();
+		for(int i=0; i < in.getLength(); i++){
+			appendToBooleanArray(out, convertToBoolean(ASCII_BIT_COUNT, in.getItem(i)));
+		}
+		return out;
+	}
+
+	public static DynArray<Integer> dynBoolToInt(DynArray<Boolean> in){
+		DynArray<Integer> out = new DynArray<Integer>();
+		int i=0;
+		for (i=0; i < 7; i++){
+			if(in.getItem(i) != false){
+				break;
+			}
+		}
+		for(i++; i < in.getLength()/7; i++){
+			out.append(convertToInt(in, i*7, i*7+6));
+		}
+		return out;
+	}
+
 	public static void main(String[] x){
+
 		DynArray<Integer> data = readFile("file");
-		//output_data(data);
 		DynArray<Boolean> databol = lzw_encode(data);
-		System.out.println("");
-		//output_data_bol(databol);
-		System.out.println();
-		System.out.println(databol.getLength());
 		System.out.println(data.getLength()*7);
+
+		//output_data_bol(lauflaenge);
+		System.out.println("");
+		output_data_bol(databol);
+		System.out.println();
+
+		System.out.println(databol.getLength());
+		System.out.println(data.getLength() * 7);
 		System.out.println((double)databol.getLength()/(data.getLength()*7));
 		System.out.println();
 		DynArray<Integer> data_later = lzw_decode(databol);
+		System.out.println(data_later.getLength()*7);
 		//output_data(data_later);
+		int i=0;
+		for(i=0; i < data.getLength(); i++){
+			if(i >= data_later.getLength()){
+				//System.out.println("FETT VERKACKT WIRKLIDH");
+				break;
+			}
+			if(data.getItem(i) != data_later.getItem(i)){
+				System.out.println("Verkackt bei element: " + i);
+				break;
+			}
+		}
+		if(i < data_later.getLength()-1){
+			//System.out.println("nicht so optimal...");
+		}
+	}
+
+
+	//Codierung
+	public static DynArray<Boolean> LauflangeTwo(DynArray<Boolean> in) {       
+		Boolean letztesW = false;
+		Boolean aktuellesW = false;
+		DynArray<Boolean> komp = new DynArray();
+		int count=1;
+		letztesW=in.getItem(0);
+		for (int i = 1; i < in.getLength(); i++) {
+			aktuellesW=in.getItem(i);
+			if (aktuellesW==letztesW) {
+				count++;
+				if (count>4) {
+					komp.append(letztesW);
+					appendToBooleanArray(komp,convertToBoolean(2,3));
+					count=1;
+				} // end of if
+			} else {
+				komp.append(letztesW);
+				appendToBooleanArray(komp,convertToBoolean(2,count-1));
+				count=1;
+				letztesW=aktuellesW;
+			} // end of if-else
+		}
+		komp.append(letztesW);
+		appendToBooleanArray(komp,convertToBoolean(2,count-1));
+		return komp;
+	}
+
+	public static DynArray<Boolean> LauflangeThree(DynArray<Boolean> in) {       
+		Boolean letztesW = false;
+		Boolean aktuellesW = false;
+		DynArray<Boolean> komp = new DynArray();
+		int count=1;
+		letztesW=in.getItem(0);
+		for (int i = 1; i < in.getLength(); i++) {
+			aktuellesW=in.getItem(i);
+			if (aktuellesW==letztesW) {
+				count++;
+				if (count>8) {
+					komp.append(letztesW);
+					appendToBooleanArray(komp,convertToBoolean(3,7));
+					count=1;
+				} // end of if
+			} else {
+				komp.append(letztesW);
+				appendToBooleanArray(komp,convertToBoolean(3,count-1));
+				count=1;
+				letztesW=aktuellesW;
+			} // end of if-else
+		}
+		komp.append(letztesW);
+		appendToBooleanArray(komp,convertToBoolean(3,count-1));
+		return komp;
+	}
+
+	public static DynArray<Boolean> LauflangeFour(DynArray<Boolean> in) {       
+		Boolean letztesW = false;
+		Boolean aktuellesW = false;
+		DynArray<Boolean> komp = new DynArray();
+		int count=1;
+		letztesW=in.getItem(0);
+		for (int i = 1; i < in.getLength(); i++) {
+			aktuellesW=in.getItem(i);
+			if (aktuellesW==letztesW) {
+				count++;
+				if (count>16) {
+					komp.append(letztesW);
+					appendToBooleanArray(komp,convertToBoolean(4,15));
+					count=1;
+				} // end of if
+			} else {
+				komp.append(letztesW);
+				appendToBooleanArray(komp,convertToBoolean(4,count-1));
+				count=1;
+				letztesW=aktuellesW;
+			} // end of if-else
+		}
+		komp.append(letztesW);
+		appendToBooleanArray(komp,convertToBoolean(4,count-1));
+		return komp;
+	}
+
+	//Decodierung
+
+	public static DynArray<Boolean> LauflangeTwoDecode(DynArray<Boolean> in) {       
+		Boolean jetzt= false;
+		Boolean sorte = false;
+		int count=1;
+		int stelle=0;
+		DynArray<Boolean> out = new DynArray();
+		for (int i = 0; i < in.getLength(); i++) {
+			jetzt=in.getItem(i);
+			stelle++;
+			if (stelle==2) {
+				if (jetzt==true) {
+					count=count+2;
+				} // end of if
+			} else {
+				if (stelle==3) {
+					if (jetzt==true) {
+						count++;
+					} // end of if
+				} else {
+					if (stelle==4) {
+						for (int j = 0; j < count; j++) {
+							out.append(sorte);
+						}
+						count=1;
+						stelle=1;
+						sorte=jetzt;
+					} else {
+						sorte=jetzt;
+					} // end of if-else
+				} // end of if-else
+			} // end of if-else    
+		}  
+		for (int j = 0; j < count; j++) {
+			out.append(sorte);
+		}
+		return out;
+	}
+
+	public static DynArray<Boolean> LauflangeThreeDecode(DynArray<Boolean> in) {       
+		Boolean jetzt= false;
+		Boolean sorte = false;
+		int count=1;
+		int stelle=0;
+		DynArray<Boolean> out = new DynArray();
+		for (int i = 0; i < in.getLength(); i++) {
+			jetzt=in.getItem(i);
+			stelle++;
+			if (stelle==2) {
+				if (jetzt==true) {
+					count=count+4;
+				} // end of if
+			} else {
+				if (stelle==3) {
+					if (jetzt==true) {
+						count=count+2;
+					} // end of if
+				} else {
+					if (stelle==4) {
+						if (jetzt==true) {
+							count++;
+						} // end of if
+					} else {
+						if (stelle==5) {
+							for (int j = 0; j < count; j++) {
+								out.append(sorte);
+							}
+							count=1;
+							stelle=1;
+							sorte=jetzt;
+						} else {
+							sorte=jetzt;
+						} // end of if-else
+					} // end of if-else
+				} // end of if-else
+			} // end of if-else    
+		}  
+		for (int j = 0; j < count; j++) {
+			out.append(sorte);
+		}
+		return out;
+	}
+
+	public static DynArray<Boolean> LauflangeFourDecode(DynArray<Boolean> in) {       
+		Boolean jetzt= false;
+		Boolean sorte = false;
+		int count=1;
+		int stelle=0;
+		DynArray<Boolean> out = new DynArray();
+		for (int i = 0; i < in.getLength(); i++) {
+			jetzt=in.getItem(i);
+			stelle++;
+			if (stelle==2) {
+				if (jetzt==true) {
+					count=count+8;
+				} // end of if
+			} else {  
+				if (stelle==3) {
+					if (jetzt==true) {
+						count=count+4;
+					} // end of if
+				} else {
+					if (stelle==4) {
+						if (jetzt==true) {
+							count=count+2;
+						} // end of if
+					} else {
+						if (stelle==5) {
+							if (jetzt==true) {
+								count++;
+							} // end of if
+						} else {
+							if (stelle==6) {
+								for (int j = 0; j < count; j++) {
+									out.append(sorte);
+								}
+								count=1;
+								stelle=1;
+								sorte=jetzt;
+							} else {
+								sorte=jetzt;
+							} // end of if-else
+						} // end of if-else
+					} // end of if-else
+				} // end of if-else    
+			}
+		}    
+		for (int j = 0; j < count; j++) {
+			out.append(sorte);
+		}
+		return out;
 	}
 }
