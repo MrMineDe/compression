@@ -6,6 +6,13 @@ public class Main {
 	private static final int ASCII_MAX = 127;
 	private static final int MAX_LZW_POINTER_BITS = 4;
 	private static final int ASCII_BIT_COUNT = 7;
+	private static final int ALGORITHM_ENCODING_BIT_LEN = 3;
+	private static final int ALGORITHM_ENCODING_FINISHED = 0;
+	private static final int ALGORITHM_ENCODING_LZW = 1;
+	private static final int ALGORITHM_ENCODING_LL2 = 2;
+	private static final int ALGORITHM_ENCODING_LL3 = 3;
+	private static final int ALGORITHM_ENCODING_LL4 = 4;
+	private static final int ALGORITHM_ENCODING_HUFFMAN = 5;
 
 
 	// returns the position of the searchterm in the dynarray and -1 if the searchterm is not found
@@ -41,8 +48,8 @@ public class Main {
 			} else {
 				dictionary.append(prev_word+cur_word);
 				int encodingForPrev_word = ASCII_MAX + findInDynArray(prev_word, dictionary);
-				if(bitsForPointers < bitLength(encodingForPrev_word - (ASCII_MAX))){
-					bitsForPointers = bitLength(encodingForPrev_word - (ASCII_MAX));
+				if(bitsForPointers < bitLength(encodingForPrev_word+1 - (ASCII_MAX))){
+					bitsForPointers = bitLength(encodingForPrev_word+1 - (ASCII_MAX));
 				}
 				// If the prev word is not found in the dictionary the value should 
 				// be just the character
@@ -54,8 +61,8 @@ public class Main {
 			}
 		}
 		int encodingForPrev_word = ASCII_MAX + findInDynArray(prev_word, dictionary);
-		if(bitsForPointers < bitLength(encodingForPrev_word - (ASCII_MAX))){
-			bitsForPointers = bitLength(encodingForPrev_word - (ASCII_MAX));
+		if(bitsForPointers < bitLength(encodingForPrev_word+1 - (ASCII_MAX))){
+			bitsForPointers = bitLength(encodingForPrev_word+1 - (ASCII_MAX));
 		}
 		if(encodingForPrev_word == ASCII_MAX-1){
 			encodingForPrev_word = prev_word.charAt(0);
@@ -66,7 +73,7 @@ public class Main {
 		DynArray<Boolean> out2 = new DynArray<Boolean>();
 		appendToBooleanArray(out2, convertToBoolean(MAX_LZW_POINTER_BITS, bitsForPointers-1));
 		for (int i = 0; i < out.getLength(); i++) {
-			if(out.getItem(i) > ASCII_MAX){
+			if(out.getItem(i) >= ASCII_MAX){
 				out2.append(true);
 				appendToBooleanArray(out2, convertToBoolean(bitsForPointers, out.getItem(i)-ASCII_MAX));
 			} else {
@@ -104,8 +111,6 @@ public class Main {
 				prev_word = dict.getItem(dict.getLength()-1);
 				dict.delete(dict.getLength()-1);
 			}
-			// DER SCHEINT HIER DIE QUEUE UND SO NOCH NICHT RICHITG ZU MACHEN, SO DASS DAS TYPISCHE PROBLEM AUFTRITT
-			// UND DAS ELEMENT WAS GESUCHT IST NOCH NICHT IM DICTIONARY IST
 			if(isPointer){
 				int pointerValue = convertToInt(input, i, i+bitsForPointers-1);
 				i += bitsForPointers;
@@ -241,6 +246,39 @@ public class Main {
 		return out;
 	}
 
+	public static DynArray<Boolean> huffman_encode(DynArray<Integer> in){
+		return new DynArray<Boolean>();
+	}
+
+	public static DynArray<Boolean> encode(DynArray<Integer> in){
+		DynArray<Boolean> out = new DynArray<Boolean>();
+		while (true){
+			DynArray<Boolean> lzw_encoded = lzw_encode(in);
+			DynArray<Boolean> ll_encoded2 = LauflangeTwo(dynIntToBool(in));
+			DynArray<Boolean> ll_encoded3 = LauflangeThree(dynIntToBool(in));
+			DynArray<Boolean> ll_encoded4 = LauflangeFour(dynIntToBool(in));
+			DynArray<Boolean> huffman_encoded = huffman_encode(in);
+
+			int lzw_encoded_len = lzw_encoded.getLength();
+			int ll_encoded2_len = ll_encoded2.getLength();
+			int ll_encoded3_len = ll_encoded3.getLength();
+			int ll_encoded4_len = ll_encoded4.getLength();
+			int huffman_encoded_len = huffman_encoded.getLength();
+
+			if(lzw_encoded_len >= ll_encoded2_len &&
+			   lzw_encoded_len >= ll_encoded3_len &&
+			   lzw_encoded_len >= ll_encoded4_len &&
+			   lzw_encoded_len >= huffman_encoded_len){
+				out = new DynArray<Boolean>();
+				appendToBooleanArray(out, convertToBoolean(ALGORITHM_ENCODING_BIT_LEN, ALGORITHM_ENCODING_LZW));
+				
+
+			}
+			break;
+		}
+		return out;
+	}
+
 	public static void main(String[] x){
 
 		DynArray<Integer> data = readFile("file");
@@ -262,7 +300,7 @@ public class Main {
 		int i=0;
 		for(i=0; i < data.getLength(); i++){
 			if(i >= data_later.getLength()){
-				//System.out.println("FETT VERKACKT WIRKLIDH");
+				System.out.println("FETT VERKACKT WIRKLIDH");
 				break;
 			}
 			if(data.getItem(i) != data_later.getItem(i)){
@@ -271,7 +309,7 @@ public class Main {
 			}
 		}
 		if(i < data_later.getLength()-1){
-			//System.out.println("nicht so optimal...");
+			System.out.println("nicht so optimal...");
 		}
 	}
 
@@ -280,7 +318,7 @@ public class Main {
 	public static DynArray<Boolean> LauflangeTwo(DynArray<Boolean> in) {       
 		Boolean letztesW = false;
 		Boolean aktuellesW = false;
-		DynArray<Boolean> komp = new DynArray();
+		DynArray<Boolean> komp = new DynArray<Boolean>();
 		int count=1;
 		letztesW=in.getItem(0);
 		for (int i = 1; i < in.getLength(); i++) {
@@ -307,7 +345,7 @@ public class Main {
 	public static DynArray<Boolean> LauflangeThree(DynArray<Boolean> in) {       
 		Boolean letztesW = false;
 		Boolean aktuellesW = false;
-		DynArray<Boolean> komp = new DynArray();
+		DynArray<Boolean> komp = new DynArray<Boolean>();
 		int count=1;
 		letztesW=in.getItem(0);
 		for (int i = 1; i < in.getLength(); i++) {
@@ -334,7 +372,7 @@ public class Main {
 	public static DynArray<Boolean> LauflangeFour(DynArray<Boolean> in) {       
 		Boolean letztesW = false;
 		Boolean aktuellesW = false;
-		DynArray<Boolean> komp = new DynArray();
+		DynArray<Boolean> komp = new DynArray<Boolean>();
 		int count=1;
 		letztesW=in.getItem(0);
 		for (int i = 1; i < in.getLength(); i++) {
@@ -365,7 +403,7 @@ public class Main {
 		Boolean sorte = false;
 		int count=1;
 		int stelle=0;
-		DynArray<Boolean> out = new DynArray();
+		DynArray<Boolean> out = new DynArray<Boolean>();
 		for (int i = 0; i < in.getLength(); i++) {
 			jetzt=in.getItem(i);
 			stelle++;
@@ -403,7 +441,7 @@ public class Main {
 		Boolean sorte = false;
 		int count=1;
 		int stelle=0;
-		DynArray<Boolean> out = new DynArray();
+		DynArray<Boolean> out = new DynArray<Boolean>();
 		for (int i = 0; i < in.getLength(); i++) {
 			jetzt=in.getItem(i);
 			stelle++;
@@ -447,7 +485,7 @@ public class Main {
 		Boolean sorte = false;
 		int count=1;
 		int stelle=0;
-		DynArray<Boolean> out = new DynArray();
+		DynArray<Boolean> out = new DynArray<Boolean>();
 		for (int i = 0; i < in.getLength(); i++) {
 			jetzt=in.getItem(i);
 			stelle++;
