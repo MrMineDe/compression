@@ -317,7 +317,7 @@ public class Main {
 			   lzw_encoded_len <= ll_encoded3_len &&
 			   lzw_encoded_len <= ll_encoded4_len &&
 			   lzw_encoded_len <= huffman_encoded_len &&
-			   lzw_encoded_len < out.getLength()+ALGORITHM_ENCODING_BIT_LEN){
+			   lzw_encoded_len+ALGORITHM_ENCODING_BIT_LEN < out.getLength()){
 				out = new DynArray<Boolean>();
 				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
 				for(int i=0; i < (ASCII_BIT_COUNT-1) - (lzw_encoded_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
@@ -334,7 +334,7 @@ public class Main {
 			          ll_encoded2_len <= ll_encoded3_len &&
 			          ll_encoded2_len <= ll_encoded4_len &&
 			          ll_encoded2_len <= huffman_encoded_len && 
-			          ll_encoded2_len < out.getLength()+ALGORITHM_ENCODING_BIT_LEN){
+			          ll_encoded2_len+ALGORITHM_ENCODING_BIT_LEN < out.getLength()){
 				out = new DynArray<Boolean>();
 				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
 				for(int i=0; i < (ASCII_BIT_COUNT-1) - (ll_encoded2_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
@@ -350,7 +350,7 @@ public class Main {
 			          ll_encoded3_len <= lzw_encoded_len &&
 			          ll_encoded3_len <= ll_encoded4_len &&
 			          ll_encoded3_len <= huffman_encoded_len &&
-			          ll_encoded3_len < out.getLength()+ALGORITHM_ENCODING_BIT_LEN){
+			          ll_encoded3_len+ALGORITHM_ENCODING_BIT_LEN < out.getLength()){
 				out = new DynArray<Boolean>();
 				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
 				for(int i=0; i < (ASCII_BIT_COUNT-1) - (ll_encoded3_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
@@ -366,7 +366,7 @@ public class Main {
 			          ll_encoded4_len <= ll_encoded3_len &&
 			          ll_encoded4_len <= lzw_encoded_len &&
 			          ll_encoded4_len <= huffman_encoded_len &&
-			          ll_encoded4_len < out.getLength()+ALGORITHM_ENCODING_BIT_LEN){
+			          ll_encoded4_len+ALGORITHM_ENCODING_BIT_LEN < out.getLength()){
 				out = new DynArray<Boolean>();
 				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
 				for(int i=0; i < (ASCII_BIT_COUNT-1) - (ll_encoded4_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
@@ -382,7 +382,7 @@ public class Main {
 			          huffman_encoded_len <= ll_encoded3_len &&
 			          huffman_encoded_len <= ll_encoded4_len &&
 			          huffman_encoded_len <= lzw_encoded_len &&
-			          huffman_encoded_len < out.getLength()+ALGORITHM_ENCODING_BIT_LEN){
+			          huffman_encoded_len+ALGORITHM_ENCODING_BIT_LEN < out.getLength()){
 				out = new DynArray<Boolean>();
 				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
 				for(int i=0; i < (ASCII_BIT_COUNT-1) - (huffman_encoded_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
