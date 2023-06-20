@@ -300,7 +300,8 @@ public class Main {
 		DynArray<Boolean> orig = new DynArray<Boolean>();
 
 		int countMixerAfterEachOther = 0;
-		while (true){
+		// Stop encoding when you only done mixer functions 3 times in a row
+		while (countMixerAfterEachOther < 3){
 			DynArray<Boolean> lzw_encoded = lzw_encode(dynBoolToInt(out));
 			DynArray<Boolean> ll_encoded2 = LauflangeTwo(out);
 			DynArray<Boolean> ll_encoded3 = LauflangeThree(out);
@@ -395,11 +396,6 @@ public class Main {
 				}
 				countMixerAfterEachOther = 0;
 			} else {
-				// Stop encoding when you only done mixer functions 3 times in a row
-				if(countMixerAfterEachOther > 3){
-					break;
-				}
-
 				// Save the text before throwing it through the mixer. If no method is useful after mixing it is smarter
 				// to just take the orig text before mixing, because mixing always adds a few bits at least
 				if(countMixerAfterEachOther == 0){
