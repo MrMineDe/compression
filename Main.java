@@ -13,6 +13,12 @@ public class Main {
 	private static final int ALGORITHM_ENCODING_LL3 = 3;
 	private static final int ALGORITHM_ENCODING_LL4 = 4;
 	private static final int ALGORITHM_ENCODING_HUFFMAN = 5;
+	private static final int ALGORITHM_ENCODING_XYZ = 6;
+	private static final int ALGORITHM_ENCODING_PRIMFAKTOR = 7;
+	//Wie viel? Lohnt sich dynamisch?
+	private static final int XYZ_X_ENCODING_BIT_LEN = 2;
+	private static final int XYZ_Y_ENCODING_BIT_LEN = 2;
+	private static final int XYZ_Z_ENCODING_BIT_LEN = 6;
 
 
 	// returns the position of the searchterm in the dynarray and -1 if the searchterm is not found
@@ -136,8 +142,8 @@ public class Main {
 	}
 
 	public static DynArray<String> lzwResolveQueue(DynArray<String> dict,
-	                              String queue,
-	                              String prev_word){
+	                                               String queue,
+	                                               String prev_word){
 		String cur_word;
 		boolean dublicate;
 		for(int i=0; i < queue.length(); i++){
@@ -250,14 +256,53 @@ public class Main {
 		return new DynArray<Boolean>();
 	}
 
-	public static DynArray<Boolean> encode(DynArray<Integer> in){
+	//FUNKTIONIERT NUR BEDINGT:
+	//IMMER 2^2 und IMMER NUR 8 BITS... GEHT DASS NICHT BESSER?
+	//ACHJA UND ENCODE UND DECODE MUSS GETESTET WERDEN
+	public static DynArray<Boolean> xyz_encode(DynArray<Boolean> in){
 		DynArray<Boolean> out = new DynArray<Boolean>();
+		for(int i=0; i < in.getLength()/7; i++){
+			//make zahl from 8 Bits
+			int zahl;
+			zahl = convertToInt(in, i*7, i*7 + 6);
+
+			int besteRest = zahl;
+			int besteX = 99999999; 
+			int besteY = 99999999;
+			int besteZ = 99999999;
+			for (int x = 2; x < 5000; x++) {    //x wird jeden durchlauf um 1 denn x darf nicht größer als wurzel von zahl           
+				for (int y = 2; y < 20; y++) {     //y alle durchlaufen bis y=20
+					int z = zahl - (int)Math.pow(x, y);  //zugehöriges z wird errechnet
+					if (bitLength(z)<bitLength(besteZ) && bitLength(x)<bitLength(besteX) && bitLength(y)<bitLength(besteY)) {    //falls z>0 und 
+						besteRest = z;
+						besteX = x;
+						besteY = y;
+						besteZ = z;
+					}
+				}
+			}
+
+			System.out.println(zahl + " = " + besteX + " ^ " + besteY + " + " + besteZ);
+
+			out = appendToBooleanArray(out, convertToBoolean(XYZ_X_ENCODING_BIT_LEN, besteX));
+			out = appendToBooleanArray(out, convertToBoolean(XYZ_Y_ENCODING_BIT_LEN, besteY));
+			out = appendToBooleanArray(out, convertToBoolean(XYZ_Z_ENCODING_BIT_LEN, besteZ));
+		}
+
+		return out;
+	}
+
+	public static DynArray<Boolean> encode(DynArray<Integer> in){
+		DynArray<Boolean> out = dynIntToBool(in);
+		DynArray<Boolean> orig = new DynArray<Boolean>();
+
+		int countMixerAfterEachOther = 0;
 		while (true){
-			DynArray<Boolean> lzw_encoded = lzw_encode(in);
-			DynArray<Boolean> ll_encoded2 = LauflangeTwo(dynIntToBool(in));
-			DynArray<Boolean> ll_encoded3 = LauflangeThree(dynIntToBool(in));
-			DynArray<Boolean> ll_encoded4 = LauflangeFour(dynIntToBool(in));
-			DynArray<Boolean> huffman_encoded = huffman_encode(in);
+			DynArray<Boolean> lzw_encoded = lzw_encode(dynBoolToInt(out));
+			DynArray<Boolean> ll_encoded2 = LauflangeTwo(out);
+			DynArray<Boolean> ll_encoded3 = LauflangeThree(out);
+			DynArray<Boolean> ll_encoded4 = LauflangeFour(out);
+			DynArray<Boolean> huffman_encoded = huffman_encode(dynBoolToInt(out));
 
 			int lzw_encoded_len = lzw_encoded.getLength();
 			int ll_encoded2_len = ll_encoded2.getLength();
@@ -265,25 +310,190 @@ public class Main {
 			int ll_encoded4_len = ll_encoded4.getLength();
 			int huffman_encoded_len = huffman_encoded.getLength();
 
-			if(lzw_encoded_len >= ll_encoded2_len &&
-			   lzw_encoded_len >= ll_encoded3_len &&
-			   lzw_encoded_len >= ll_encoded4_len &&
-			   lzw_encoded_len >= huffman_encoded_len){
+			if(lzw_encoded_len <= ll_encoded2_len &&
+			   lzw_encoded_len <= ll_encoded3_len &&
+			   lzw_encoded_len <= ll_encoded4_len &&
+			   lzw_encoded_len <= huffman_encoded_len &&
+			   lzw_encoded_len < out.getLength()+ALGORITHM_ENCODING_BIT_LEN){
 				out = new DynArray<Boolean>();
-				appendToBooleanArray(out, convertToBoolean(ALGORITHM_ENCODING_BIT_LEN, ALGORITHM_ENCODING_LZW));
-				
+				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
+				for(int i=0; i < (ASCII_BIT_COUNT-1) - (lzw_encoded_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
+					out.append(false);
+				}
+				out.append(true);
 
+				appendToBooleanArray(out, convertToBoolean(ALGORITHM_ENCODING_BIT_LEN, ALGORITHM_ENCODING_LZW));
+				for(int i=0; i < lzw_encoded.getLength(); i++){
+					out.append(lzw_encoded.getItem(i));
+				}
+				countMixerAfterEachOther = 0;
+			} else if(ll_encoded2_len <= lzw_encoded_len &&
+			          ll_encoded2_len <= ll_encoded3_len &&
+			          ll_encoded2_len <= ll_encoded4_len &&
+			          ll_encoded2_len <= huffman_encoded_len && 
+			          ll_encoded2_len < out.getLength()+ALGORITHM_ENCODING_BIT_LEN){
+				out = new DynArray<Boolean>();
+				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
+				for(int i=0; i < (ASCII_BIT_COUNT-1) - (ll_encoded2_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
+					out.append(false);
+				}
+				out.append(true);
+				appendToBooleanArray(out, convertToBoolean(ALGORITHM_ENCODING_BIT_LEN, ALGORITHM_ENCODING_LL2));
+				for(int i=0; i < ll_encoded2.getLength(); i++){
+					out.append(ll_encoded2.getItem(i));
+				}
+				countMixerAfterEachOther = 0;
+			} else if(ll_encoded3_len <= ll_encoded2_len &&
+			          ll_encoded3_len <= lzw_encoded_len &&
+			          ll_encoded3_len <= ll_encoded4_len &&
+			          ll_encoded3_len <= huffman_encoded_len &&
+			          ll_encoded3_len < out.getLength()+ALGORITHM_ENCODING_BIT_LEN){
+				out = new DynArray<Boolean>();
+				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
+				for(int i=0; i < (ASCII_BIT_COUNT-1) - (ll_encoded3_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
+					out.append(false);
+				}
+				out.append(true);
+				appendToBooleanArray(out, convertToBoolean(ALGORITHM_ENCODING_BIT_LEN, ALGORITHM_ENCODING_LL3));
+				for(int i=0; i < ll_encoded3.getLength(); i++){
+					out.append(ll_encoded3.getItem(i));
+				}
+				countMixerAfterEachOther = 0;
+			} else if(ll_encoded4_len <= ll_encoded2_len &&
+			          ll_encoded4_len <= ll_encoded3_len &&
+			          ll_encoded4_len <= lzw_encoded_len &&
+			          ll_encoded4_len <= huffman_encoded_len &&
+			          ll_encoded4_len < out.getLength()+ALGORITHM_ENCODING_BIT_LEN){
+				out = new DynArray<Boolean>();
+				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
+				for(int i=0; i < (ASCII_BIT_COUNT-1) - (ll_encoded4_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
+					out.append(false);
+				}
+				out.append(true);
+				appendToBooleanArray(out, convertToBoolean(ALGORITHM_ENCODING_BIT_LEN, ALGORITHM_ENCODING_LL4));
+				for(int i=0; i < ll_encoded4.getLength(); i++){
+					out.append(ll_encoded4.getItem(i));
+				}
+				countMixerAfterEachOther = 0;
+			} else if(huffman_encoded_len <= ll_encoded2_len &&
+			          huffman_encoded_len <= ll_encoded3_len &&
+			          huffman_encoded_len <= ll_encoded4_len &&
+			          huffman_encoded_len <= lzw_encoded_len &&
+			          huffman_encoded_len < out.getLength()+ALGORITHM_ENCODING_BIT_LEN){
+				out = new DynArray<Boolean>();
+				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
+				for(int i=0; i < (ASCII_BIT_COUNT-1) - (huffman_encoded_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
+					out.append(false);
+				}
+				out.append(true);
+				appendToBooleanArray(out, convertToBoolean(ALGORITHM_ENCODING_BIT_LEN, ALGORITHM_ENCODING_HUFFMAN));
+				for(int i=0; i < huffman_encoded.getLength(); i++){
+					out.append(huffman_encoded.getItem(i));
+				}
+				countMixerAfterEachOther = 0;
+			} else {
+				// Stop encoding when you only done mixer functions 3 times in a row
+				if(countMixerAfterEachOther > 3){
+					break;
+				}
+
+				// Save the text before throwing it through the mixer. If no method is useful after mixing it is smarter
+				// to just take the orig text before mixing, because mixing always adds a few bits at least
+				if(countMixerAfterEachOther == 0){
+					orig = new DynArray<Boolean>();
+					for(int i=0; i < out.getLength(); i++){
+						orig.append(out.getItem(i));
+					}
+				}
+
+				DynArray<Boolean> xyz_encoded = xyz_encode(out);
+				DynArray<Boolean> primfaktor_encoded = primfaktor_encode(out);
+
+				if(xyz_encoded.getLength() <= primfaktor_encoded.getLength()){
+					out = new DynArray<Boolean>();
+					appendToBooleanArray(out, convertToBoolean(ALGORITHM_ENCODING_BIT_LEN, ALGORITHM_ENCODING_XYZ));
+					for(int i=0; i < xyz_encoded.getLength(); i++){
+						out.append(xyz_encoded.getItem(i));
+					}
+				} else {
+					out = new DynArray<Boolean>();
+					appendToBooleanArray(out, convertToBoolean(ALGORITHM_ENCODING_BIT_LEN, ALGORITHM_ENCODING_PRIMFAKTOR));
+					for(int i=0; i < primfaktor_encoded.getLength(); i++){
+						out.append(primfaktor_encoded.getItem(i));
+					}
+				}
+				countMixerAfterEachOther++;
 			}
-			break;
+		}
+		return orig;
+	}
+
+	public static DynArray<Boolean> decode(DynArray<Boolean> in){
+		DynArray<Boolean> out = new DynArray<Boolean>();
+		int algorithm = -1;
+		while(algorithm != ALGORITHM_ENCODING_FINISHED){
+
+			//delete the fill zeros that got there for dividadability (ka)
+			while(out.getItem(0)==false){
+				out.delete(0);
+			}
+			out.delete(0);
+
+			algorithm = convertToInt(out, 0, ALGORITHM_ENCODING_BIT_LEN-1);
+			//delete the algorithm hint bits, they are no longer needed
+			for(int i=0; i < 3; i++){
+				out.delete(0);
+			}
+
+			switch(algorithm){
+			case ALGORITHM_ENCODING_LZW:
+				out = dynIntToBool(lzw_decode(out));
+				break;
+			case ALGORITHM_ENCODING_LL2:
+				out = LauflangeTwoDecode(out);
+				break;
+			case ALGORITHM_ENCODING_LL3:
+				out = LauflangeThreeDecode(out);
+				break;
+			case ALGORITHM_ENCODING_LL4:
+				out = LauflangeFourDecode(out);
+				break;
+			case ALGORITHM_ENCODING_HUFFMAN:
+				out = huffman_decode(out);
+				break;
+			case ALGORITHM_ENCODING_XYZ:
+				out = xyz_decode(out);
+				break;
+			case ALGORITHM_ENCODING_PRIMFAKTOR:
+				out = primfaktor_decode(out);
+				break;
+			}
+
 		}
 		return out;
 	}
 
+	public static DynArray<Boolean> primfaktor_encode(DynArray<Boolean> in){
+		return new DynArray<Boolean>();
+	}
+	public static DynArray<Boolean> primfaktor_decode(DynArray<Boolean> in){
+		return new DynArray<Boolean>();
+	}
+	public static DynArray<Boolean> xyz_decode(DynArray<Boolean> in){
+		return new DynArray<Boolean>();
+	}
+	public static DynArray<Boolean> huffman_decode(DynArray<Boolean> in){
+		return new DynArray<Boolean>();
+	}
+
+
 	public static void main(String[] x){
 
 		DynArray<Integer> data = readFile("file");
-		DynArray<Boolean> databol = lzw_encode(data);
+		//DynArray<Boolean> databol = lzw_encode(data);
 		System.out.println(data.getLength()*7);
+
+		DynArray<Boolean> databol = xyz_encode(dynIntToBool(data));
 
 		//output_data_bol(lauflaenge);
 		System.out.println("");
@@ -294,7 +504,7 @@ public class Main {
 		System.out.println(data.getLength() * 7);
 		System.out.println((double)databol.getLength()/(data.getLength()*7));
 		System.out.println();
-		DynArray<Integer> data_later = lzw_decode(databol);
+		/*DynArray<Integer> data_later = lzw_decode(databol);
 		System.out.println(data_later.getLength()*7);
 		//output_data(data_later);
 		int i=0;
@@ -311,6 +521,7 @@ public class Main {
 		if(i < data_later.getLength()-1){
 			System.out.println("nicht so optimal...");
 		}
+		*/
 	}
 
 
