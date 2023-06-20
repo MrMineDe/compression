@@ -261,19 +261,22 @@ public class Main {
 	//ACHJA UND ENCODE UND DECODE MUSS GETESTET WERDEN
 	public static DynArray<Boolean> xyz_encode(DynArray<Boolean> in){
 		DynArray<Boolean> out = new DynArray<Boolean>();
-		for(int i=0; i < in.getLength()/7; i++){
-			//make zahl from 8 Bits
+		appendToBooleanArray(out, convertToBoolean(XYZ_ENCODING_REST_BIT_LEN, in.getLength()%28)));
+		for(int i=0; i < in.getLength()/28; i++){
+			//make zahl from 7 Bits
 			int zahl;
-			zahl = convertToInt(in, i*7, i*7 + 6);
+			zahl = convertToInt(in, i*28, i*28 + 6);
 
 			int besteRest = zahl;
-			int besteX = 99999999; 
+			int besteX = 99999999;
 			int besteY = 99999999;
 			int besteZ = 99999999;
 			for (int x = 2; x < 5000; x++) {    //x wird jeden durchlauf um 1 denn x darf nicht größer als wurzel von zahl           
 				for (int y = 2; y < 20; y++) {     //y alle durchlaufen bis y=20
 					int z = zahl - (int)Math.pow(x, y);  //zugehöriges z wird errechnet
-					if (bitLength(z)<bitLength(besteZ) && bitLength(x)<bitLength(besteX) && bitLength(y)<bitLength(besteY)) {    //falls z>0 und 
+					if (bitLength(z) <= XYZ_Z_ENCODING_BIT_LEN && 
+					bitLength(x) <= XYZ_X_ENCODING_BIT_LEN &&
+					bitLength(y) <= XYZ_Y_ENCODING_BIT_LEN) {    //falls z>0 und 
 						besteRest = z;
 						besteX = x;
 						besteY = y;
