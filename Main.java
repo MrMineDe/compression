@@ -524,53 +524,51 @@ public class Main {
 		*/
 	}
 
-
 	//Codierung
 	public static DynArray<Boolean> LauflangeTwo(DynArray<Boolean> in) {       
-		Boolean letztesW = false;
-		Boolean aktuellesW = false;
-		DynArray<Boolean> komp = new DynArray<Boolean>();
+		Boolean letztesW = in.getItem(0);    //Erstellen der nötigen Hilfsvariablen
+		Boolean aktuellesW = false;  
+		DynArray<Boolean> komp = new DynArray<Boolean>(); //Variable die Ausgegeben wird
 		int count=1;
-		letztesW=in.getItem(0);
 		for (int i = 1; i < in.getLength(); i++) {
 			aktuellesW=in.getItem(i);
-			if (aktuellesW==letztesW) {
+			if (aktuellesW==letztesW) {         //es wird überprüf, ob der aktuelle Bit mit dem Vorherigen übereinstimmt 
 				count++;
-				if (count>4) {
-					komp.append(letztesW);
+				if (count>4) {                    //wenn die Bits häufiger als 4 mal in folge kommen, wird die Sorte gefolgt von der Angabe, dass es viermal auftritt 
+					komp.append(letztesW);                              
 					appendToBooleanArray(komp,convertToBoolean(2,3));
 					count=1;
 				} // end of if
-			} else {
-				komp.append(letztesW);
-				appendToBooleanArray(komp,convertToBoolean(2,count-1));
+			} else {                            //wenn nicht mehr die gleichen  Bits auf einander folgen, wird die Sorte der Bits und dann die Haufigkeit angegeben
+			komp.append(letztesW);
+			appendToBooleanArray(komp,convertToBoolean(2,count-1));
 				count=1;
 				letztesW=aktuellesW;
 			} // end of if-else
 		}
 		komp.append(letztesW);
-		appendToBooleanArray(komp,convertToBoolean(2,count-1));
+		appendToBooleanArray(komp,convertToBoolean(2,count-1));    //innerhalb der Schleife wirden die letzte Folge gleicher Bits nicht angehangen, daher muss sie danach angehangen werden.
 		return komp;
 	}
 
 	public static DynArray<Boolean> LauflangeThree(DynArray<Boolean> in) {       
-		Boolean letztesW = false;
+		Boolean letztesW = in.getItem(0);    //Erstellen der nötigen Hilfsvariablen
 		Boolean aktuellesW = false;
-		DynArray<Boolean> komp = new DynArray<Boolean>();
+		DynArray<Boolean> komp = new DynArray<Boolean>();  //Variable die Ausgegeben wird
 		int count=1;
 		letztesW=in.getItem(0);
-		for (int i = 1; i < in.getLength(); i++) {
+		for (int i = 1; i < in.getLength(); i++) {     //Theorie bleibt gleich
 			aktuellesW=in.getItem(i);
 			if (aktuellesW==letztesW) {
 				count++;
-				if (count>8) {
+				if (count>8) {                             //aber es können mehr Bits innerhalb einer Angabe gespeichert werden
 					komp.append(letztesW);
 					appendToBooleanArray(komp,convertToBoolean(3,7));
 					count=1;
 				} // end of if
 			} else {
-				komp.append(letztesW);
-				appendToBooleanArray(komp,convertToBoolean(3,count-1));
+			komp.append(letztesW);
+			appendToBooleanArray(komp,convertToBoolean(3,count-1));
 				count=1;
 				letztesW=aktuellesW;
 			} // end of if-else
@@ -581,23 +579,23 @@ public class Main {
 	}
 
 	public static DynArray<Boolean> LauflangeFour(DynArray<Boolean> in) {       
-		Boolean letztesW = false;
+		Boolean letztesW = in.getItem(0);    //Erstellen der nötigen Hilfsvariablen
 		Boolean aktuellesW = false;
-		DynArray<Boolean> komp = new DynArray<Boolean>();
+		DynArray<Boolean> komp = new DynArray<Boolean>(); //Variable die Ausgegeben wird
 		int count=1;
 		letztesW=in.getItem(0);
-		for (int i = 1; i < in.getLength(); i++) {
+		for (int i = 1; i < in.getLength(); i++) {     //Theorie bleibt gleich
 			aktuellesW=in.getItem(i);
 			if (aktuellesW==letztesW) {
 				count++;
-				if (count>16) {
+				if (count>16) {                            //aber es können mehr Bits innerhalb einer Angabe gespeichert werden
 					komp.append(letztesW);
 					appendToBooleanArray(komp,convertToBoolean(4,15));
 					count=1;
 				} // end of if
 			} else {
-				komp.append(letztesW);
-				appendToBooleanArray(komp,convertToBoolean(4,count-1));
+			komp.append(letztesW);
+			appendToBooleanArray(komp,convertToBoolean(4,count-1));
 				count=1;
 				letztesW=aktuellesW;
 			} // end of if-else
@@ -610,38 +608,38 @@ public class Main {
 	//Decodierung
 
 	public static DynArray<Boolean> LauflangeTwoDecode(DynArray<Boolean> in) {       
-		Boolean jetzt= false;
-		Boolean sorte = false;
+		Boolean jetzt= false;                //Erstellen der nötigen Hilfsvariablen
+		Boolean sorte = false;               
 		int count=1;
 		int stelle=0;
 		DynArray<Boolean> out = new DynArray<Boolean>();
-		for (int i = 0; i < in.getLength(); i++) {
+		for (int i = 0; i < in.getLength(); i++) {  //je nach Stelle im DynArray hat der Bit eine andere Bedeutung
 			jetzt=in.getItem(i);
 			stelle++;
-			if (stelle==2) {
-				if (jetzt==true) {
+		if (stelle==2) {
+				if (jetzt==true) {                      //an der Stelle gibt der Bit an, dass 2 weitere Bits im Originaltext der Sorte angehören
 					count=count+2;
 				} // end of if
 			} else {
-				if (stelle==3) {
+				if (stelle==3) {                        //an der Stelle gibt der Bit an, dass ein weiterer Bit im Originaltext der Sorte angehört 
 					if (jetzt==true) {
 						count++;
 					} // end of if
 				} else {
-					if (stelle==4) {
-						for (int j = 0; j < count; j++) {
+					if (stelle==4) {                      //an der ersten Stelle gibt der Bit ob die Bits der Folge im Originaltext auf "true" oder "false" gesetzt sind
+					for (int j = 0; j < count; j++) {
 							out.append(sorte);
 						}
-						count=1;
+						count=1; //es ist immer mindestens 1 Bit in einer Folge
 						stelle=1;
 						sorte=jetzt;
-					} else {
+					} else {                             
 						sorte=jetzt;
 					} // end of if-else
 				} // end of if-else
 			} // end of if-else    
 		}  
-		for (int j = 0; j < count; j++) {
+		for (int j = 0; j < count; j++) {          //die letzte Folge wird nicht in der Schleife angehangen und wird daher nach ihr angehangen
 			out.append(sorte);
 		}
 		return out;
@@ -656,26 +654,26 @@ public class Main {
 		for (int i = 0; i < in.getLength(); i++) {
 			jetzt=in.getItem(i);
 			stelle++;
-			if (stelle==2) {
+			if (stelle==2) {                          //an der Stelle gibt der Bit an, dass 4 weitere Bits im Originaltext der Sorte angehören
 				if (jetzt==true) {
 					count=count+4;
 				} // end of if
 			} else {
-				if (stelle==3) {
+				if (stelle==3) {                         //an der Stelle gibt der Bit an, dass 2 weitere Bits im Originaltext der Sorte angehören
 					if (jetzt==true) {
 						count=count+2;
 					} // end of if
 				} else {
-					if (stelle==4) {
+					if (stelle==4) {                       //an der Stelle gibt der Bit an, dass ein weiterer Bit im Originaltext der Sorte angehört
 						if (jetzt==true) {
 							count++;
 						} // end of if
 					} else {
-						if (stelle==5) {
+						if (stelle==5) {                     //an der ersten Stelle gibt der Bit ob die Bits der Folge im Originaltext auf "true" oder "false" gesetzt sind
 							for (int j = 0; j < count; j++) {
 								out.append(sorte);
 							}
-							count=1;
+							count=1; //es ist immer mindestens 1 Bit in einer Folge
 							stelle=1;
 							sorte=jetzt;
 						} else {
@@ -685,7 +683,7 @@ public class Main {
 				} // end of if-else
 			} // end of if-else    
 		}  
-		for (int j = 0; j < count; j++) {
+		for (int j = 0; j < count; j++) {            //die letzte Folge wird nicht in der Schleife angehangen und wird daher nach ihr angehangen
 			out.append(sorte);
 		}
 		return out;
@@ -700,31 +698,31 @@ public class Main {
 		for (int i = 0; i < in.getLength(); i++) {
 			jetzt=in.getItem(i);
 			stelle++;
-			if (stelle==2) {
+			if (stelle==2) {                            //an der Stelle gibt der Bit an, dass 8 weitere Bits im Originaltext der Sorte angehören
 				if (jetzt==true) {
 					count=count+8;
 				} // end of if
 			} else {  
-				if (stelle==3) {
+				if (stelle==3) {                          //an der Stelle gibt der Bit an, dass 4 weitere Bits im Originaltext der Sorte angehören
 					if (jetzt==true) {
 						count=count+4;
 					} // end of if
 				} else {
-					if (stelle==4) {
+					if (stelle==4) {                        //an der Stelle gibt der Bit an, dass 2 weitere Bits im Originaltext der Sorte angehören
 						if (jetzt==true) {
 							count=count+2;
 						} // end of if
 					} else {
-						if (stelle==5) {
+						if (stelle==5) {                      //an der Stelle gibt der Bit an, dass ein weiterer Bit im Originaltext der Sorte angehört
 							if (jetzt==true) {
 								count++;
 							} // end of if
 						} else {
-							if (stelle==6) {
+							if (stelle==6) {                    //an der ersten Stelle gibt der Bit ob die Bits der Folge im Originaltext auf "true" oder "false" gesetzt sind
 								for (int j = 0; j < count; j++) {
 									out.append(sorte);
 								}
-								count=1;
+								count=1; //es ist immer mindestens 1 Bit in einer Folge
 								stelle=1;
 								sorte=jetzt;
 							} else {
@@ -735,7 +733,7 @@ public class Main {
 				} // end of if-else    
 			}
 		}    
-		for (int j = 0; j < count; j++) {
+		for (int j = 0; j < count; j++) {             //die letzte Folge wird nicht in der Schleife angehangen und wird daher nach ihr angehangen
 			out.append(sorte);
 		}
 		return out;
