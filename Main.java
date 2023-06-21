@@ -1,7 +1,7 @@
 import java.io.*;
 
 
-public class Main2 {
+public class Main {
 
 	private static final int ASCII_MAX = 127;
 	private static final int MAX_LZW_POINTER_BITS = 4;
@@ -641,40 +641,23 @@ public class Main2 {
 
 	public static void main(String[] x){
 
-		DynArray<Integer> data = readFile("file");
-		output_data(data);
-		System.out.println("\n");
-		//DynArray<Boolean> databol = lzw_encode(data);
+		DynArray<Integer> data = readFile("input");
 		DynArray<Boolean> encoded = encode(data);
 		DynArray<Integer> encoded_i = dynBoolToIntNoCheck(encoded);
 
-		writeFile(encoded_i, "output");
-		DynArray<Boolean> encoded_read = dynIntToBool(readFile("output"));
-
-		DynArray<Boolean> decoded = decode(encoded_read);
-		DynArray<Integer> decoded_i = dynBoolToIntNoCheck(decoded);
-		output_data(encoded_i);
-		System.out.println("\n");
-
-
+		writeFile(encoded_i, "output_encoded");
+		//DynArray<Boolean> encoded_read = dynIntToBool(readFile("output"));
+		System.out.println();
 		System.out.println(encoded_i.getLength()*7);
 		System.out.println(data.getLength()*7);
 		System.out.println((double)encoded_i.getLength()/data.getLength());
 
-		int i;
-		for(i=0; i < data.getLength(); i++){
-			if(i >= decoded_i.getLength()){
-				System.out.println("FETT VERKACKT WIRKLIDH");
-				break;
-			}
-			if(data.getItem(i) != decoded_i.getItem(i)){
-				System.out.println("Verkackt bei element: " + i);
-				break;
-			}
-		}
-		if(i < decoded_i.getLength()-1){
-			System.out.println("nicht so optimal...");
-		}
+		DynArray<Boolean> decoded = decode(encoded);
+		DynArray<Integer> decoded_i = dynBoolToIntNoCheck(decoded);
+		
+		writeFile(decoded_i, "output_decoded");
+
+
 	}
 
 	//Codierung
@@ -1143,10 +1126,10 @@ if(z1[inp.getItem(i)] [j] == false){
 	public static void dekomp(Boolean [] [] tab1, Boolean[] ein2){
 		//aus dem komprimierten input-array und der codetabelle (nach createTab) wird die dekomprimierte version erzeugt
 		int index =0;
-		while (ein2.length > index){
+			while (ein2.length-1 > index){
 			for(int i=0;i<128;i++){
 				for(int j =0; j<128;j++){ 
-	if(j==0 && tab1 [i] [j] == null){
+					if(j==0 && tab1 [i] [j] == null){
 						break;
 					}
 					if(tab1 [i] [j] == null){
