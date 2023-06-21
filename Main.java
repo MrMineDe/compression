@@ -1,7 +1,7 @@
 import java.io.*;
 
 
-public class Main {
+public class Main2 {
 
 	private static final int ASCII_MAX = 127;
 	private static final int MAX_LZW_POINTER_BITS = 4;
@@ -76,7 +76,7 @@ public class Main {
 		}
 		out.append(encodingForPrev_word);
 
-		System.out.println(bitsForPointers);
+		//System.out.println(bitsForPointers);
 		DynArray<Boolean> out2 = new DynArray<Boolean>();
 		appendToBooleanArray(out2, convertToBoolean(MAX_LZW_POINTER_BITS, bitsForPointers-1));
 		for (int i = 0; i < out.getLength(); i++) {
@@ -284,8 +284,14 @@ public class Main {
 		return out;
 	}
 
-	public static DynArray<Boolean> huffman_encode(DynArray<Integer> in){
-		return new DynArray<Boolean>();
+	public static DynArray<Integer> dynBoolToIntNoCheck(DynArray<Boolean> in){
+		DynArray<Integer> out = new DynArray<Integer>();
+
+		for(int i=0; i < in.getLength()/7; i++){
+			out.append(convertToInt(in, i*7, i*7+6));
+		}
+		//output_data(out);
+		return out;
 	}
 
 	public static DynArray<Boolean> xyz_encode(DynArray<Boolean> in){
@@ -348,30 +354,42 @@ public class Main {
 		return out;
 	}
 
+
+
 	public static DynArray<Boolean> encode(DynArray<Integer> in){
 		DynArray<Boolean> out = dynIntToBool(in);
+		for(int i=0; i < 3; i++){
+			out.insertAt(0, false);
+		}	
+
+		int outlen = out.getLength();
+		out.insertAt(0, true);
+		for(int i=0; i < (ASCII_BIT_COUNT-1) - outlen % ASCII_BIT_COUNT; i++){
+			out.insertAt(i, false);
+		}
 		DynArray<Boolean> orig = new DynArray<Boolean>();
 
 		int countMixerAfterEachOther = 0;
 		// Stop encoding when you only done mixer functions 3 times in a row
 		while (countMixerAfterEachOther < 3){
-			DynArray<Boolean> lzw_encoded = lzw_encode(dynBoolToInt(out));
+			DynArray<Boolean> lzw_encoded = lzw_encode(dynBoolToIntNoCheck(out));
 			DynArray<Boolean> ll_encoded2 = LauflangeTwo(out);
 			DynArray<Boolean> ll_encoded3 = LauflangeThree(out);
 			DynArray<Boolean> ll_encoded4 = LauflangeFour(out);
-			//DynArray<Boolean> huffman_encoded = huffman_encode(dynBoolToInt(out));
+			DynArray<Boolean> huffman_encoded = kompressionHuff(dynBoolToIntNoCheck(out));
 
 			int lzw_encoded_len = lzw_encoded.getLength();
 			int ll_encoded2_len = ll_encoded2.getLength();
 			int ll_encoded3_len = ll_encoded3.getLength();
 			int ll_encoded4_len = ll_encoded4.getLength();
-			//int huffman_encoded_len = huffman_encoded.getLength();
+			int huffman_encoded_len = huffman_encoded.getLength();
 
 			if(lzw_encoded_len <= ll_encoded2_len &&
 			   lzw_encoded_len <= ll_encoded3_len &&
 			   lzw_encoded_len <= ll_encoded4_len &&
-			   //lzw_encoded_len <= huffman_encoded_len &&
+			   lzw_encoded_len <= huffman_encoded_len &&
 			   lzw_encoded_len+ALGORITHM_ENCODING_BIT_LEN < out.getLength()){
+				System.out.println("lzw");
 				out = new DynArray<Boolean>();
 				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
 				for(int i=0; i < (ASCII_BIT_COUNT-1) - (lzw_encoded_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
@@ -387,8 +405,9 @@ public class Main {
 			} else if(ll_encoded2_len <= lzw_encoded_len &&
 			          ll_encoded2_len <= ll_encoded3_len &&
 			          ll_encoded2_len <= ll_encoded4_len &&
-			          //ll_encoded2_len <= huffman_encoded_len && 
+			          ll_encoded2_len <= huffman_encoded_len && 
 			          ll_encoded2_len+ALGORITHM_ENCODING_BIT_LEN < out.getLength()){
+				System.out.println("ll2");
 				out = new DynArray<Boolean>();
 				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
 				for(int i=0; i < (ASCII_BIT_COUNT-1) - (ll_encoded2_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
@@ -403,8 +422,9 @@ public class Main {
 			} else if(ll_encoded3_len <= ll_encoded2_len &&
 			          ll_encoded3_len <= lzw_encoded_len &&
 			          ll_encoded3_len <= ll_encoded4_len &&
-			          //ll_encoded3_len <= huffman_encoded_len &&
+			          ll_encoded3_len <= huffman_encoded_len &&
 			          ll_encoded3_len+ALGORITHM_ENCODING_BIT_LEN < out.getLength()){
+				System.out.println("ll3");
 				out = new DynArray<Boolean>();
 				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
 				for(int i=0; i < (ASCII_BIT_COUNT-1) - (ll_encoded3_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
@@ -419,8 +439,9 @@ public class Main {
 			} else if(ll_encoded4_len <= ll_encoded2_len &&
 			          ll_encoded4_len <= ll_encoded3_len &&
 			          ll_encoded4_len <= lzw_encoded_len &&
-			          //ll_encoded4_len <= huffman_encoded_len &&
+			          ll_encoded4_len <= huffman_encoded_len &&
 			          ll_encoded4_len+ALGORITHM_ENCODING_BIT_LEN < out.getLength()){
+				System.out.println("ll4");
 				out = new DynArray<Boolean>();
 				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
 				for(int i=0; i < (ASCII_BIT_COUNT-1) - (ll_encoded4_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
@@ -432,11 +453,12 @@ public class Main {
 					out.append(ll_encoded4.getItem(i));
 				}
 				countMixerAfterEachOther = 0;
-			/*} else if(huffman_encoded_len <= ll_encoded2_len &&
+			} else if(huffman_encoded_len <= ll_encoded2_len &&
 			          huffman_encoded_len <= ll_encoded3_len &&
 			          huffman_encoded_len <= ll_encoded4_len &&
 			          huffman_encoded_len <= lzw_encoded_len &&
 			          huffman_encoded_len+ALGORITHM_ENCODING_BIT_LEN < out.getLength()){
+				System.out.println("huff");
 				out = new DynArray<Boolean>();
 				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
 				for(int i=0; i < (ASCII_BIT_COUNT-1) - (huffman_encoded_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
@@ -447,8 +469,9 @@ public class Main {
 				for(int i=0; i < huffman_encoded.getLength(); i++){
 					out.append(huffman_encoded.getItem(i));
 				}
-				countMixerAfterEachOther = 0;*/
+				countMixerAfterEachOther = 0;
 			} else {
+				System.out.println("mix");
 				// Save the text before throwing it through the mixer. If no method is useful after mixing it is smarter
 				// to just take the orig text before mixing, because mixing always adds a few bits at least
 				if(countMixerAfterEachOther == 0){
@@ -475,6 +498,7 @@ public class Main {
 					for(int i=0; i < (ASCII_BIT_COUNT-1) - (komMix_encoded.getLength()+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
 						out.append(false);
 					}
+					out.append(true);
 
 					appendToBooleanArray(out, convertToBoolean(ALGORITHM_ENCODING_BIT_LEN, ALGORITHM_ENCODING_komMix));
 					for(int i=0; i < komMix_encoded.getLength(); i++){
@@ -484,15 +508,12 @@ public class Main {
 				countMixerAfterEachOther++;
 			}
 		}
-		for(int i=0; i < 3; i++){
-			orig.insertAt(0, false);
-		}
 
 		return orig;
 	}
 
 	public static DynArray<Boolean> decode(DynArray<Boolean> in){
-		DynArray<Boolean> out = new DynArray<Boolean>();
+		DynArray<Boolean> out = in;
 		int algorithm = -1;
 		while(algorithm != ALGORITHM_ENCODING_FINISHED){
 
@@ -521,10 +542,10 @@ public class Main {
 			case ALGORITHM_ENCODING_LL4:
 				out = LauflangeFourDecode(out);
 				break;
-			/*case ALGORITHM_ENCODING_HUFFMAN:
-				out = huffman_decode(out);
+			case ALGORITHM_ENCODING_HUFFMAN:
+				out = dynIntToBool(dekompressionHuff(out));
 				break;
-			*/
+			
 			case ALGORITHM_ENCODING_XYZ:
 				out = dynIntToBool(xyz_decode(out));
 				break;
@@ -594,62 +615,66 @@ public class Main {
 		return output;
 	}
 
+	public static void writeFile(DynArray <Integer> ein, String outputFile){
+        int[] neuEin=new int[ein.getLength()];
+        for(int i=0;i<ein.getLength();i++){
+            neuEin[i]=ein.getItem(i);
+        }
+        char[] charEin = new char[neuEin.length];
+        for(int i=0;i<neuEin.length;i++){
+            charEin[i]=(char) neuEin[i];
+        }
+        String ausgabe="";
+        for(int i=0;i<charEin.length;i++){
+            ausgabe = ausgabe + charEin[i];
+        }
+        try{
+        PrintWriter writer = new PrintWriter(new FileOutputStream(outputFile, false));
+        writer.println(ausgabe);
+        writer.close();
+        }
+        catch (IOException e){
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+    }
+
 	public static void main(String[] x){
 
 		DynArray<Integer> data = readFile("file");
+		output_data(data);
+		System.out.println("\n");
 		//DynArray<Boolean> databol = lzw_encode(data);
+		DynArray<Boolean> encoded = encode(data);
+		DynArray<Integer> encoded_i = dynBoolToIntNoCheck(encoded);
+
+		writeFile(encoded_i, "output");
+		DynArray<Boolean> encoded_read = dynIntToBool(readFile("output"));
+
+		DynArray<Boolean> decoded = decode(encoded_read);
+		DynArray<Integer> decoded_i = dynBoolToIntNoCheck(decoded);
+		output_data(encoded_i);
+		System.out.println("\n");
+
+
+		System.out.println(encoded_i.getLength()*7);
 		System.out.println(data.getLength()*7);
+		System.out.println((double)encoded_i.getLength()/data.getLength());
 
-		//DynArray<Boolean> databol = xyz_encode(dynIntToBool(data));
-
-		//output_data_bol(lauflaenge);
-		//output_data_bol(databol);
-
-		//System.out.println(databol.getLength());
-		//System.out.println(data.getLength() * 7);
-		//System.out.println((double)databol.getLength()/(data.getLength()*7));
-		//System.out.println();
-
-
-		//DynArray<Integer> data_later = xyz_decode(databol);
-		//System.out.println(data_later.getLength()*7);
-		//output_data(data_later);
-		/*
-		int i=0;
+		int i;
 		for(i=0; i < data.getLength(); i++){
-			if(i >= data_later.getLength()){
+			if(i >= decoded_i.getLength()){
 				System.out.println("FETT VERKACKT WIRKLIDH");
 				break;
 			}
-			if(data.getItem(i) != data_later.getItem(i)){
+			if(data.getItem(i) != decoded_i.getItem(i)){
 				System.out.println("Verkackt bei element: " + i);
 				break;
 			}
 		}
-		if(i < data_later.getLength()-1){
+		if(i < decoded_i.getLength()-1){
 			System.out.println("nicht so optimal...");
 		}
-		*/
-
-		DynArray<Boolean> databolv = dynIntToBool(data);
-		DynArray<Boolean> dataencrypt = encode(data);
-		DynArray<Boolean> datadecrypt = decode(dataencrypt);
-
-		int i=0;
-		for(i=0; i < databolv.getLength(); i++){
-			if(i >= datadecrypt.getLength()){
-				System.out.println("FETT VERKACKT WIRKLIDH");
-				break;
-			}
-			if(databolv.getItem(i) != datadecrypt.getItem(i)){
-				System.out.println("Verkackt bei element: " + i);
-				break;
-			}
-		}
-		if(i < datadecrypt.getLength()-1){
-			System.out.println("nicht so optimal...");
-		}
-
 	}
 
 	//Codierung
@@ -866,4 +891,316 @@ public class Main {
 		}
 		return out;
 	}
+
+	public static DynArray <BinTree <Integer[]>> binar = new DynArray <BinTree <Integer[]> >();
+	public static DynArray <Integer> codetab = new DynArray <Integer>();
+	public static BinTree <Integer[]> enc1 = new BinTree <Integer[]>();
+	public static BinTree <Integer[]> enc2 = new BinTree <Integer[]>();
+	public static int sTc=0;
+	public static int[] vorlage = new int[128];
+	public static Boolean [] [] kompZ = new Boolean [128] [128];
+	public static DynArray <Boolean> kompTemp = new DynArray <Boolean>();
+	public static DynArray <Boolean> out = new DynArray <Boolean>();
+	public static DynArray <Integer> out2 = new DynArray <Integer>();
+	public static DynArray <Boolean> tempB= new DynArray <Boolean>();
+
+	public static DynArray <Boolean> kompressionHuff(DynArray <Integer> einH){
+		// Hauptfunktion zur kompression mit aufruf aller methoden in reihenfolge zur kompression; eingabe ist ein DynArray <integer> der in ein DynArray <Boolean> komprimiert wird; aufruf in kompressionHuff zur uebersicht
+		for(int i=0;i<tempB.getLength();i++){
+			tempB.delete(0);
+		}
+		for (int i=0; i<vorlage.length;i++){
+			vorlage[i]=i;
+		}  
+		for(int z=0;z<kompZ.length;z++){
+			for(int i=0;i<kompZ.length;i++){
+				kompZ[z][i]=null;
+			}
+		}
+		enc1.deleteLeft();
+		enc1.deleteRight();  
+		Integer[] wahrsch = new Integer[128];
+		wahrsch = erstelleHaeufigkeit(einH);
+		erstelleDynArray(wahrsch);
+		sTc=0;
+		createTree(codetab, enc1);
+		// ermitteln der tabelle in 2 arrays mit dem bintree; komprimierung; entkomprimierung(ermitteln des trees erneut mit createT, dann entschlüsseln)
+		createTab(enc1);
+		komp(kompZ, einH);
+		verbindeKomp(codetab, out);
+		return tempB;
+	}
+
+	public static DynArray <Integer> huffmanDekomp(DynArray <Boolean> eingDK){
+		// Zwischenfunktion zur dekompression; fuehrt alles methoden in richtiger reihenfolge zur dekompression aus und gibt den unkomprimierten text als DynArray <Integer> aus
+		enc2.deleteLeft();
+		enc2.deleteRight(); 
+		for(int i=0;i<tempB.getLength();i++){
+			tempB.delete(0);
+		}
+		for (int i=0; i<vorlage.length;i++){
+			vorlage[i]=i;
+		} 
+		for(int z=0;z<kompZ.length;z++){
+			for(int i=0;i<kompZ.length;i++){
+				kompZ[z][i]=null;
+			}
+		}
+		DynArray <Boolean> tempkurz = new DynArray <Boolean> ();
+		for(int i=0;i<12;i++){
+			tempkurz.append(eingDK.getItem(i));    
+		}
+		int laenge = convertToInt(tempkurz, 0, 11 );
+		DynArray <Boolean> tempUS = new DynArray <Boolean>();
+		for(int i=12;i<12+laenge;i++){
+			tempUS.append(eingDK.getItem(i));
+		}
+		DynArray <Boolean> tempTxt = new DynArray <Boolean>();
+		for(int i=12+laenge;i<eingDK.getLength();i++){
+			tempTxt.append(eingDK.getItem(i));
+		}
+		DynArray <Integer> usFinal = new DynArray <Integer>();
+		for(int i=0;i<tempUS.getLength();i++){
+			if(tempUS.getItem(i)==false){
+				usFinal.append(0);
+			}
+			if(tempUS.getItem(i)==true){
+				usFinal.append(1);
+				DynArray <Boolean> tempUS2 = new DynArray <Boolean>();
+				for(int j=1;j<8;j++){
+					tempUS2.append(tempUS.getItem(i+j));
+				}
+				usFinal.append(convertToInt(tempUS2, 0, 6));
+				i=i+7;
+			}
+		}
+		sTc=0;
+		createTree(usFinal,enc2);
+		createTab(enc2);
+		Boolean[] bol1 = new Boolean [tempTxt.getLength()];
+		for(int i=0; i<tempTxt.getLength();i++){
+			bol1[i]=tempTxt.getItem(i);
+		}
+		dekomp(kompZ, bol1);
+		return out2;
+	}
+
+	public static Integer[] erstelleHaeufigkeit(DynArray <Integer> a){
+		//es wird aus dem array a ein hauefigkeitsarray hauf erstellt. Das hauf-array hat die laenge der ascii-codierung und beschreibt wie oft die jeweiligen ascii-zeichen vorkommen
+		Integer[] hauf= new Integer[128];
+		for(int i=0;i<hauf.length;i++){
+			hauf[i]=0;
+		}
+		for(int i=0;i<a.getLength();i++){
+			hauf[a.getItem(i)]++ ;
+		}
+		return hauf;
+	}
+
+	public static void erstelleDynArray(Integer[] hauf){
+		// der DynArray binar wird mit Binaerbaeumen gefuellt. Diese besitzten als Inhalt einen Array a1 der die Hauefigkeit und den Ascii-Index der Zeichen enthaelt
+		for(int i=0; i<hauf.length;i++){
+			BinTree <Integer[]> b1=new BinTree <Integer[]>();
+			Integer[] a1=new Integer[2];
+			a1[0]=hauf[i];
+			a1[1]=i;
+			b1.setItem(a1);
+			binar.append(b1);
+		} 
+		//rekursivBaum fuegt die beiden Binaerbaume mit den geringsten Hauefigkeiten an einer Wurzel zusammen und fuegt diese Wurzel (mit der gesamten Hauefigkeit der Teilbauem als Inhalt) in den DynArray ein und loescht die vorherigen beiden Binaerbaeume aus dem DynArray
+		rekursivBaum(binar);
+//searchT schreibt den Binaerbaum in einem gewaehlten Format in den DynArray codetab. Es wird eine 0 eingefuegt wenn es sich um eine Wurzel handelt, eine 1 wenn es sich um ein Blatt handelt und nach der 1 folgt der Ascii-Wert.
+		searchT(binar.getItem(binar.getLength()-1));
+		sTc=0;
+	}
+
+	public static void searchT(BinTree <Integer[]> b){
+		// wenn der Teilbaum ein Blatt ist, endet die Methode und fuegt eine 1 und daraufhin den ascii-wert in codetab ein 
+		if(b.isLeaf()){
+			codetab.append(1);
+			codetab.append(b.getItem()[1]);
+		}
+		else {
+			//codetab erhaehlt eine 0    
+			codetab.append(0);
+			//rekursiver Aufruf nach pre-order (w-l-r)
+			if(b.hasLeft()){
+				searchT(b.getLeft());
+			}
+			codetab.append(0);
+			if(b.hasRight()){
+				searchT(b.getRight());
+			}
+}
+}
+
+	public static void rekursivBaum(DynArray < BinTree <Integer[]> > ein){
+		//min und min2 müssen auf den max-indez-wert gesetzt werden
+		int max=0;
+		for(int i=0;i<ein.getLength();i++){
+			if(ein.getItem(max).getItem()[0]<ein.getItem(i).getItem()[0]){
+				max=i;
+			}
+		}
+		int min=max;
+		int min2=max;
+		for(int i=0;i<ein.getLength();i++){
+			if(ein.getItem(min).getItem()[0] >= ein.getItem(i).getItem()[0] && ein.getItem(i).getItem()[0] != 0){
+				min=i;
+			}
+		}
+		for(int i=0; i<ein.getLength();i++){
+			if(ein.getItem(min2).getItem()[0] >= ein.getItem(i).getItem()[0] && i != min && ein.getItem(i).getItem()[0] != 0){
+				min2=i;
+			}
+}
+//bis hierhin wird das Minimum und 2. Minimum an Hauefigkeiten gesucht und die Indizes in min und min2 gespeichert 
+		BinTree <Integer[]> b2 = new BinTree <Integer[]>();
+		Integer[] a2= new Integer[1];
+if(ein.getItem(min).getItem()[0] == 0 || ein.getItem(min2).getItem()[0] == 0 || min==min2){
+			//wenn min oder min2 0 sind endet die Rekursion (Abbruchsbedingung)
+			binar=ein;
+			return;
+		}
+		//die beiden Teilbaume werden zusammengefuegt, die neue gesamthauefigkeit wird ermittelt und die originale werden aus binar geloescht
+		else {
+			a2[0] = ein.getItem(min).getItem()[0] + ein.getItem(min2).getItem()[0];
+			b2.setItem(a2);
+			b2.setLeft(ein.getItem(min2));
+			b2.setRight(ein.getItem(min));
+			ein.getItem(min).getItem()[0]=0;
+			ein.getItem(min2).getItem()[0]=0;
+			ein.append(b2);
+		}  
+		//rekursiver Aufruf bis nur noch eine Wurzel in binar vorhanden ist
+		rekursivBaum(ein); 
+	}
+
+	public static void createTree(DynArray <Integer> a1, BinTree <Integer[]> b3){
+		// aus dem DynArray codetab wird der BinTree gebildet (bei 0 nach links und am ende der funktion ebenfalls nach rechts Teilbaeume schaffen , bei 1 beenden und ascii wert hinzufuegen)
+		if(a1.getItem(sTc)==1){
+			sTc++;
+			Integer[] a3 = new Integer [2];
+			a3[0]=0;
+			a3[1]=a1.getItem(sTc);
+			b3.setItem(a3);
+			sTc++;
+			return;
+		} 
+		if(a1.getItem(sTc)==0){ 
+			if(!b3.hasLeft()){
+				sTc++;
+				BinTree <Integer[]> b4 = new BinTree <Integer[]>();
+				b3.setLeft(b4); 
+createTree(a1, b4);
+}  
+if(!b3.hasRight()){
+				sTc++;
+				BinTree <Integer[]> b4 = new BinTree <Integer[]>();
+				b3.setRight(b4); 
+				createTree(a1, b4);
+			}  
+		}
+	}
+
+	public static void createTab(BinTree <Integer[]> b5){
+		// Hier wird die Huffman-Code-Tabelle in Form eines zweidimensionalen Boolean-Array [128] [128] erstellt; die index-werte bei [128] [k] geben das zeichen in ascii-code an
+		if(b5.hasLeft()){
+			kompTemp.append(false);
+			createTab(b5.getLeft());
+		}
+		if (b5.isLeaf()){
+	for(int i=0;i<kompTemp.getLength();i++){
+	kompZ [b5.getItem()[1]] [i] = kompTemp.getItem(i);
+}
+		}
+		if(b5.hasRight()){
+	kompTemp.append(true);
+			createTab(b5.getRight());
+		}
+		if(!kompTemp.isEmpty()){
+			kompTemp.delete(kompTemp.getLength()-1);
+		}
+		return;
+	}
+
+	public static void komp(Boolean [] [] z1, DynArray <Integer> inp ){
+		//aus der erstellten codetabelle(durch createTab) wird ein eingegebener dynarray mit integer-werten (inp) zu einem neuen, komprimierten dynarray out 
+		for(int i=0; i < inp.getLength();i++){
+			for(int j=0; j < 128;j++){
+				if(z1[inp.getItem(i)] [j] != null){
+					if(z1[inp.getItem(i)] [j] == true){
+	out.append(true);
+}
+if(z1[inp.getItem(i)] [j] == false){
+						out.append(false);
+					}
+}
+			}
+		}
+	}
+
+	public static void dekomp(Boolean [] [] tab1, Boolean[] ein2){
+		//aus dem komprimierten input-array und der codetabelle (nach createTab) wird die dekomprimierte version erzeugt
+		int index =0;
+		while (ein2.length > index){
+			for(int i=0;i<128;i++){
+				for(int j =0; j<128;j++){ 
+	if(j==0 && tab1 [i] [j] == null){
+						break;
+					}
+					if(tab1 [i] [j] == null){
+						out2.append(i);
+						index=index+j;
+						break;
+					}
+					if(index+j > ein2.length-1){
+						break;
+}
+					if(tab1 [i] [j] != ein2[index+j]){
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	public static void verbindeKomp(DynArray <Integer> uS, DynArray <Boolean> uKomp){
+		// der output wird erstellt: zuerst 12 bits mit der laenge der huffman-codierung; dann die huffman-codierung; dann der komprimierte text
+		Boolean [] tempb2 = new Boolean [7];
+		Boolean [] tempb3 = new Boolean [12];
+		for(int i=0; i<uS.getLength();i++){
+			if(uS.getItem(i)==0){
+				tempB.append(false);
+			}
+			if(uS.getItem(i)==1){
+				tempB.append(true);
+				i++;
+				tempb2=convertToBoolean(7,uS.getItem(i));
+				for(int j=0;j<tempb2.length;j++){
+					tempB.append(tempb2[j]);
+				}
+			}
+		}
+		// 12 hier variabel (beschreibt die maximale moegliche laenge der huffman-codierung -> bei 12 bits darf die huffman-codierung maximal 4096 bits betragen
+		tempb3=convertToBoolean(12, tempB.getLength());
+		for(int i=0; i<tempb3.length;i++){
+	tempB.insertAt(i, tempb3[i]);
+		}
+for(int i=0; i<uKomp.getLength();i++){
+	tempB.append(uKomp.getItem(i));
+		}
+		//tempB jetzt fertig-komprimierter output
+	}
+
+	// mit den folgenden Hauptfunktionen kann komprimiert und dekomprimiert werden: DynArray <Boolean> = kompressionHuff(DynArray <Integer>); DynArray <Integer> = dekompressionHuff(DynArray <Boolean> ein)
+
+	public static DynArray <Integer> dekompressionHuff(DynArray <Boolean> ein){
+DynArray <Boolean> tempBcool = new DynArray <Boolean>();
+for(int i=0;i<ein.getLength();i++){
+	tempBcool.append(ein.getItem(i));
+}
+		return huffmanDekomp(tempBcool);
+	}
+
 }

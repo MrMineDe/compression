@@ -64,6 +64,9 @@ public class DynArray<ContentType> {
       }
       aktPos--;
       liste = hilfsarray;
+      if(aktPos < 0){
+        aktPos = 0;
+      }
     }
   }
     
