@@ -318,12 +318,6 @@ public class Main {
 				}
 			}
 
-			//System.out.println(bitLength(zahl) + " = " + bitLength(besteX) + " ^ " + bitLength(besteY) + " + " + bitLength(besteZ));
-			//System.out.println(zahl + " = " + besteX + " ^ " + besteY + " + " + besteZ);
-			if(besteX == 0){
-				System.out.println("MOOOOOOORE");
-			}
-
 			out = appendToBooleanArray(out, convertToBoolean(XYZ_X_ENCODING_BIT_LEN, besteX-2));
 			out = appendToBooleanArray(out, convertToBoolean(XYZ_Y_ENCODING_BIT_LEN, besteY-2));
 			out = appendToBooleanArray(out, convertToBoolean(XYZ_Z_ENCODING_BIT_LEN, besteZ));
@@ -389,7 +383,6 @@ public class Main {
 			   lzw_encoded_len <= ll_encoded4_len &&
 			   lzw_encoded_len <= huffman_encoded_len &&
 			   lzw_encoded_len+ALGORITHM_ENCODING_BIT_LEN < out.getLength()){
-				System.out.println("lzw");
 				out = new DynArray<Boolean>();
 				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
 				for(int i=0; i < (ASCII_BIT_COUNT-1) - (lzw_encoded_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
@@ -407,7 +400,6 @@ public class Main {
 			          ll_encoded2_len <= ll_encoded4_len &&
 			          ll_encoded2_len <= huffman_encoded_len && 
 			          ll_encoded2_len+ALGORITHM_ENCODING_BIT_LEN < out.getLength()){
-				System.out.println("ll2");
 				out = new DynArray<Boolean>();
 				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
 				for(int i=0; i < (ASCII_BIT_COUNT-1) - (ll_encoded2_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
@@ -424,7 +416,6 @@ public class Main {
 			          ll_encoded3_len <= ll_encoded4_len &&
 			          ll_encoded3_len <= huffman_encoded_len &&
 			          ll_encoded3_len+ALGORITHM_ENCODING_BIT_LEN < out.getLength()){
-				System.out.println("ll3");
 				out = new DynArray<Boolean>();
 				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
 				for(int i=0; i < (ASCII_BIT_COUNT-1) - (ll_encoded3_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
@@ -441,7 +432,6 @@ public class Main {
 			          ll_encoded4_len <= lzw_encoded_len &&
 			          ll_encoded4_len <= huffman_encoded_len &&
 			          ll_encoded4_len+ALGORITHM_ENCODING_BIT_LEN < out.getLength()){
-				System.out.println("ll4");
 				out = new DynArray<Boolean>();
 				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
 				for(int i=0; i < (ASCII_BIT_COUNT-1) - (ll_encoded4_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
@@ -458,7 +448,6 @@ public class Main {
 			          huffman_encoded_len <= ll_encoded4_len &&
 			          huffman_encoded_len <= lzw_encoded_len &&
 			          huffman_encoded_len+ALGORITHM_ENCODING_BIT_LEN < out.getLength()){
-				System.out.println("huff");
 				out = new DynArray<Boolean>();
 				// This is to round up so the out array is dividable through 7. This is needed for convertion from Boolean to int
 				for(int i=0; i < (ASCII_BIT_COUNT-1) - (huffman_encoded_len+ALGORITHM_ENCODING_BIT_LEN) % ASCII_BIT_COUNT; i++){
@@ -471,7 +460,6 @@ public class Main {
 				}
 				countMixerAfterEachOther = 0;
 			} else {
-				System.out.println("mix");
 				// Save the text before throwing it through the mixer. If no method is useful after mixing it is smarter
 				// to just take the orig text before mixing, because mixing always adds a few bits at least
 				if(countMixerAfterEachOther == 0){
